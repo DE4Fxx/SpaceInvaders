@@ -23,13 +23,13 @@ To install this version of Space Invaders, clone the repository and ensure you h
 git clone [repository-link]
 
 # How to Play
-# Movement: 
+## Movement: 
 WASD keys for movement.
-# Slow Motion: 
+## Slow Motion: 
 Right Shift to slow down your spaceship.
-# Shooting: 
+## Shooting: 
 Space bar to shoot.
-# Power-Ups: C
+## Power-Ups: C
 ollect blue and yellow power-ups for bullet spread and health.
 ## Contributing
 # Contributions are welcome! Feel free to fork the repository, make your improvements, and submit a pull request.

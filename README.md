@@ -32,7 +32,7 @@ Space bar to shoot.
 ## Power-Ups: 
 Collect blue and yellow power-ups for bullet spread and health.
 # Contributing
-## Contributions are welcome! Feel free to fork the repository, make your improvements, and submit a pull request.
+Contributions are welcome! Feel free to fork the repository, make your improvements, and submit a pull request.
 
 ## License
 This project is licensed under the Apache License. For more details, see the LICENSE file in the repository.

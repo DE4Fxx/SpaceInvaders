@@ -246,7 +246,7 @@ class SpaceInvaders:
 
     def should_enemy_shoot(self,enemy_bullets):
         if len(enemy_bullets) < 30:
-            return random.randint(0, 100) < 1  # 1% chance for each enemy to shoot each frameaa
+            return random.randint(0, 100) < 1  # 1% chance for each enemy to shoot each frame
 
     def draw_health_bar(self, current_health):
         pygame.draw.rect(self.screen, (255, 0, 0), (10, 10, self.health_bar_length, 20))
@@ -295,6 +295,8 @@ def show_start_screen(screen):
                 if event.key == pygame.K_RETURN:  # Start the game on pressing Enter
                     running = False
                     return True
+                if event.key == pygame.K_h:  # Press 'H' to open How to Play screen
+                    show_how_to_play_screen(screen)
 
         screen.fill((0, 0, 0))  # Fill the screen with black or any other color
 
@@ -304,13 +306,46 @@ def show_start_screen(screen):
         screen.blit(title_surface, title_rect)
 
         # Render the start prompt
-        prompt_surface = prompt_font.render('Press Enter to Start', True, (255, 255, 255))
+        prompt_surface = prompt_font.render('Press Enter to Start (Press H to learn how to play)', True, (255, 255, 255))
         prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT * 2 / 3))
         screen.blit(prompt_surface, prompt_rect)
 
         pygame.display.flip()  # Update the display
 
     return True  # Return True if the game should start
+
+def show_how_to_play_screen(screen):
+    running = True
+    font = pygame.font.Font(None, 36)  # Standard font for text
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                return  # Return from the function if the window is closed
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:  # Return to main menu on pressing Enter
+                    running = False
+
+        screen.fill((0, 0, 0))  # Fill the screen with black or any other color
+
+        # Render the instructions
+        instructions = [
+            "How to Play:",
+            "Move the spaceship using WASD keys.",
+            "Shoot using the Spacebar.",
+            "Pick up power-ups for extra abilities.",
+            "Yellow balls heal you and blue balls give you bullet spread",
+            "Hold Shift to slow down your ship.",
+            "",
+            "Press Enter to return to the main menu."
+        ]
+
+        for i, line in enumerate(instructions):
+            text_surface = font.render(line, True, (255, 255, 255))  # White color
+            screen.blit(text_surface, (50, 30 + 30 * i))
+
+        pygame.display.flip()  # Update the display
 
 def show_end_screen(screen, score):
     restart = False

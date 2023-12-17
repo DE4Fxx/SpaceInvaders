@@ -10,7 +10,7 @@ class PowerUp:
         self.active_duration = 5000 
         self.speed = 5.5
         if(self.type == "heal"):
-            self.color = (0,255,0)
+            self.color = (255, 255, 0)
         elif(self.type == "spread"):
             self.color = (0,0,255)
 

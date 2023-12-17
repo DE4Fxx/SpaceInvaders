@@ -41,11 +41,6 @@ class Enemy:
         self.rect.y += speed
 
     def draw(self, screen):
-        """
-        Draws the enemy on the specified screen.
-
-        :param screen: The surface on which the enemy will be drawn.
-        """
         screen.blit(self.surface, self.rect)
 
     def shoot(self):

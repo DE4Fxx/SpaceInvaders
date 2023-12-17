@@ -1,6 +1,7 @@
 import pygame
 import random
 import enemy
+from fire import Flame
 import obstacle
 from particle import Particle
 import powerup
@@ -201,6 +202,7 @@ class SpaceInvaders:
                     self.powerups.remove(powerup)
             
             for obstacle in self.obstacles:
+                self.create_flames(obstacle.get_rect().x + 10,obstacle.get_rect().y + 10,5)
                 obstacle.draw(self.screen)
                 if self.player.colliderect(obstacle.rect):  # Check for collision
                     self.player_health -= OBSTACLE_DAMAGE * self.damage_multiplier
@@ -243,6 +245,10 @@ class SpaceInvaders:
     def create_particles(self, x, y,color, num_particles=50):
         for _ in range(num_particles):
             self.particles.append(Particle(x, y,color))
+
+    def create_flames(self, x, y, num_particles=50):
+        for _ in range(num_particles):
+            self.particles.append(Flame(x, y))
 
     def should_enemy_shoot(self,enemy_bullets):
         if len(enemy_bullets) < 30:

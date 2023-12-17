@@ -18,6 +18,9 @@ class Obstacle:
     def move(self):
         self.rect.y += self.speed
 
+    def get_rect(self):
+        return self.rect
+
     def collided_with_player(self,player):
         if self.rect.colliderect(player):
             return True

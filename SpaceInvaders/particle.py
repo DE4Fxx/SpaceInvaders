@@ -6,10 +6,17 @@ class Particle:
         self.x = x
         self.y = y
         self.size = random.randint(1, 4)
-        self.color = color # Green color for health effect
+        self.color = color 
         self.lifetime = random.randint(20, 50)  # Frames before the particle disappears
         self.x_vel = random.uniform(-1, 1)  # Horizontal velocity
         self.y_vel = random.uniform(-1, 1)  # Vertical velocity
+
+    def update_x(self,x):
+        self.x = x
+
+    def update_y(self,y):
+        self.y = y
+
 
     def move(self):
         self.x += self.x_vel

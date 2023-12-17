@@ -29,8 +29,8 @@ WASD keys for movement.
 Right Shift to slow down your spaceship.
 ## Shooting: 
 Space bar to shoot.
-## Power-Ups: C
-ollect blue and yellow power-ups for bullet spread and health.
+## Power-Ups: 
+Collect blue and yellow power-ups for bullet spread and health.
 ## Contributing
 # Contributions are welcome! Feel free to fork the repository, make your improvements, and submit a pull request.
 

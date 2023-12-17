@@ -3,8 +3,10 @@
 Modern Space Invaders reinvents the iconic arcade game with new mechanics and modern graphics. Developed using the Pygame framework, this version offers enhanced gameplay, intuitive controls, and advanced features for an engaging experience.
 
 # Key Features
-## Enhanced Controls: Navigate your spaceship with the WASD keys.
-## Slow-Motion Mechanics: Utilize the right shift key to decelerate your spaceship, adding strategic depth to the gameplay.
+## Enhanced Controls: 
+Navigate your spaceship with the WASD keys.
+## Slow-Motion Mechanics: 
+Utilize the right shift key to decelerate your spaceship, adding strategic depth to the gameplay.
 ## Firing System: 
 Use the space bar to shoot at enemies.
 ## Power-Ups:

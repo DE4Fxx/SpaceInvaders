@@ -209,6 +209,7 @@ class SpaceInvaders:
                     if self.score > 0:
                         self.score -= 15
                     self.obstacles.remove(obstacle)
+                    self.shake_screen(2,5)
                 
             for bullet in enemy_bullets:
                 bullet.draw(self.screen)
@@ -230,6 +231,24 @@ class SpaceInvaders:
 
     def should_obstacle_spawn(self):
         return random.randint(0,100) < 10
+    
+    def shake_screen(self, duration, intensity):
+        original_pos = self.screen.get_rect().topleft
+        elapsed = 0
+        clock = pygame.time.Clock()
+
+        while elapsed < duration:
+            dx, dy = random.randint(-intensity, intensity), random.randint(-intensity, intensity)
+            screen_scroll = original_pos[0] + dx, original_pos[1] + dy
+            screen.blit(self.screen, screen_scroll) # Redraw background at the offset position
+
+            pygame.display.flip()
+            elapsed += clock.tick(60)
+
+        # Reset the screen to its original position
+        screen.blit(self.screen, original_pos)
+        pygame.display.flip()
+
 
     def activate_powerup(self, powerup_type):
         if powerup_type == "spread":

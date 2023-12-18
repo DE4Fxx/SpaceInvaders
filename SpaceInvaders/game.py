@@ -8,11 +8,15 @@ import powerup
 from constants import *
 import sys
 
+NEGATIVE = pygame.transform.scale(pygame.image.load(NEGATIVE_IMAGE), (PLAYER_SIZE, PLAYER_SIZE))
+NORMAL = pygame.transform.scale(pygame.image.load(PLAYER_IMAGE), (PLAYER_SIZE, PLAYER_SIZE))
+
+
 
 
 class SpaceInvaders:
 
-    __slots__ = ["screen","enemies","damage_multiplier","bullets","player","particles","player_health","max_health","health_bar_length","health_ratio","player_speed","player_damage","multiplier","bg","min","max","player_image","last_shot_time","shooting_delay","is_spread_active","spread_duration","spread_activated_time","powerups","obstacles","score"]
+    __slots__ = ["dead_zone","control","joystick","screen","enemies","damage_multiplier","bullets","player","player_pos","particles","player_health","max_health","health_bar_length","health_ratio","player_speed","player_damage","multiplier","bg","min","max","player_image","last_shot_time","shooting_delay","is_spread_active","spread_duration","spread_activated_time","powerups","obstacles","score"]
 
 
     def __init__(self):
@@ -22,7 +26,7 @@ class SpaceInvaders:
         self.max = 350
         self.bg = pygame.transform.scale(pygame.image.load(BACKGROUND_IMAGE), (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
-        pygame.display.set_caption("Space Trivia Invaders")
+        pygame.display.set_caption("Space Invaders")
         self.enemies = [enemy.Enemy(self.min,self.max) for _ in range(random.randint(5,10))]
         player_image_original = pygame.image.load(PLAYER_IMAGE)
         self.player_image = pygame.transform.scale(player_image_original, (PLAYER_SIZE, PLAYER_SIZE))
@@ -35,7 +39,6 @@ class SpaceInvaders:
         self.powerups = []
         self.obstacles = []
         self.particles = []
-        self.player_speed = 10 
         self.player_damage = 8
         self.multiplier = 1
         self.last_shot_time = 0
@@ -43,11 +46,22 @@ class SpaceInvaders:
         self.is_spread_active = False
         self.spread_duration = 7000
         self.spread_activated_time = 0
-        self.player_health = 100  # Example starting health
+        self.player_health = 100 
         self.max_health = 100     # Maximum health
         self.health_bar_length = 200  # Total length of the health bar
         self.health_ratio = self.health_bar_length / self.max_health
         self.damage_multiplier = 1
+        if pygame.joystick.get_count() == 0:
+            self.control = "keyboard"
+            self.joystick = None
+            self.player_speed = 10 
+        else:
+            self.dead_zone = 0.1
+            self.joystick = pygame.joystick.Joystick(0)
+            self.joystick.init()
+            self.player_pos = [SCREEN_WIDTH//2,SCREEN_HEIGHT]
+            self.control = "joystick"
+            self.player_speed = 5
 
     def mainloop(self):
         clock = pygame.time.Clock()
@@ -59,54 +73,101 @@ class SpaceInvaders:
         power_up_timer = 0
         enemy_bullets = []
         running = True
+        pressing = False
+
         while running:
             dt = clock.tick(60)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
-                        self.player_speed /= 2
-                if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
-                        self.player_speed *= 2
+                if self.control == "keyboard":
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
+                            self.player_speed /= 2
+                    if event.type == pygame.KEYUP:
+                        if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
+                            self.player_speed *= 2
+                if self.control == "joystick":
+                    if event.type == pygame.JOYBUTTONDOWN or pressing:
+                        if event.button == 0:
+                            pressing = True
+                            current_time = pygame.time.get_ticks()
+                            if current_time - self.last_shot_time >= self.shooting_delay:
+                                if self.is_spread_active:
+                                    # Create spread bullets
+                                    self.bullets.append(pygame.Rect(self.player.centerx, self.player.y, BULLET_SIZE, BULLET_SIZE))  # Central bullet
+                                    self.bullets.append(pygame.Rect(self.player.centerx - 10, self.player.y, BULLET_SIZE, BULLET_SIZE))  # Left bullet
+                                    self.bullets.append(pygame.Rect(self.player.centerx + 10, self.player.y, BULLET_SIZE, BULLET_SIZE))  # Right bullet
+                                    self.bullets.append(pygame.Rect(self.player.centerx - 20, self.player.y, BULLET_SIZE, BULLET_SIZE))  # Left bullet
+                                    self.bullets.append(pygame.Rect(self.player.centerx + 20, self.player.y, BULLET_SIZE, BULLET_SIZE))  # Right bullet
+                                else:
+                                    # Create a normal bullet
+                                    self.bullets.append(pygame.Rect(self.player.centerx, self.player.y, BULLET_SIZE, BULLET_SIZE))
+                                self.last_shot_time = current_time
+                        if event.button == 5:
+                            self.player_speed /= 2
 
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_SPACE]:
-                current_time = pygame.time.get_ticks()
-                if current_time - self.last_shot_time >= self.shooting_delay:
-                    if self.is_spread_active:
-                        # Create spread bullets
-                        self.bullets.append(pygame.Rect(self.player.centerx, self.player.y, BULLET_SIZE, BULLET_SIZE))  # Central bullet
-                        self.bullets.append(pygame.Rect(self.player.centerx - 10, self.player.y, BULLET_SIZE, BULLET_SIZE))  # Left bullet
-                        self.bullets.append(pygame.Rect(self.player.centerx + 10, self.player.y, BULLET_SIZE, BULLET_SIZE))  # Right bullet
-                        self.bullets.append(pygame.Rect(self.player.centerx - 20, self.player.y, BULLET_SIZE, BULLET_SIZE))  # Left bullet
-                        self.bullets.append(pygame.Rect(self.player.centerx + 20, self.player.y, BULLET_SIZE, BULLET_SIZE))  # Right bullet
-                    else:
-                        # Create a normal bullet
-                        self.bullets.append(pygame.Rect(self.player.centerx, self.player.y, BULLET_SIZE, BULLET_SIZE))
-                    self.last_shot_time = current_time
-            if keys[pygame.K_a] and self.player.x > 0:
-                self.player.x -= self.player_speed
-            if keys[pygame.K_d] and self.player.x < SCREEN_WIDTH - self.player.width:
-                self.player.x += self.player_speed
+                    if event.type == pygame.JOYAXISMOTION:
+                                self.player_pos[0] = self.joystick.get_axis(0) # Left thumbstick horizontal
+                                self.player_pos[1] = self.joystick.get_axis(1)  # Left thumbstick vertical
 
-            # For moving up (W key), check if the player's y position is greater than 0
-            if keys[pygame.K_w] and self.player.y > 0:
-                self.player.y -= self.player_speed
+                                if abs(self.player_pos[0]) < self.dead_zone:
+                                    self.player_pos[0] = 0
+                                if abs(self.player_pos[1]) < self.dead_zone:
+                                    self.player_pos[1] = 0
 
-            # For moving down (S key), check if the player's y position is less than the screen height minus the player's height
-            if keys[pygame.K_s] and self.player.y < SCREEN_HEIGHT - self.player.height:
-                self.player.y += self.player_speed
+                                # Update player position
+                                if(self.player_pos[0] < SCREEN_WIDTH and self.player_pos[1] < SCREEN_HEIGHT):
+                                    self.player.x += self.player_pos[0] * self.player_speed
+                                    self.player.y += self.player_pos[1] * self.player_speed
+                    
 
-            # For resetting the position (R key), center the player on the screen
-            if keys[pygame.K_r]:
-                self.player.x = SCREEN_WIDTH // 2 - self.player.width // 2  # Center horizontally
-                self.player.y = SCREEN_HEIGHT // 2 - self.player.height // 2  # Center vertically
+                    if event.type == pygame.JOYBUTTONUP:
+                        if event.button == 5:
+                            self.player_speed *= 2
+                        # if event.button == 0:
+                        #     pressing = False
 
-            if keys[pygame.K_ESCAPE]:
-                pygame.QUIT
-                sys.exit()
+                        
+
+            if self.control == "keyboard":
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_SPACE]:
+                    current_time = pygame.time.get_ticks()
+                    if current_time - self.last_shot_time >= self.shooting_delay:
+                        if self.is_spread_active:
+                            # Create spread bullets
+                            self.bullets.append(pygame.Rect(self.player.centerx, self.player.y, BULLET_SIZE, BULLET_SIZE))  # Central bullet
+                            self.bullets.append(pygame.Rect(self.player.centerx - 10, self.player.y, BULLET_SIZE, BULLET_SIZE))  # Left bullet
+                            self.bullets.append(pygame.Rect(self.player.centerx + 10, self.player.y, BULLET_SIZE, BULLET_SIZE))  # Right bullet
+                            self.bullets.append(pygame.Rect(self.player.centerx - 20, self.player.y, BULLET_SIZE, BULLET_SIZE))  # Left bullet
+                            self.bullets.append(pygame.Rect(self.player.centerx + 20, self.player.y, BULLET_SIZE, BULLET_SIZE))  # Right bullet
+                        else:
+                            # Create a normal bullet
+                            self.bullets.append(pygame.Rect(self.player.centerx, self.player.y, BULLET_SIZE, BULLET_SIZE))
+                        self.last_shot_time = current_time
+                if keys[pygame.K_a] and self.player.x > 0:
+                    self.player.x -= self.player_speed
+                if keys[pygame.K_d] and self.player.x < SCREEN_WIDTH - self.player.width:
+                    self.player.x += self.player_speed
+
+                # For moving up (W key), check if the player's y position is greater than 0
+                if keys[pygame.K_w] and self.player.y > 0:
+                    self.player.y -= self.player_speed
+
+                # For moving down (S key), check if the player's y position is less than the screen height minus the player's height
+                if keys[pygame.K_s] and self.player.y < SCREEN_HEIGHT - self.player.height:
+                    self.player.y += self.player_speed
+
+                # For resetting the position (R key), center the player on the screen
+                if keys[pygame.K_r]:
+                    self.player.x = SCREEN_WIDTH // 2 - self.player.width // 2  # Center horizontally
+                    self.player.y = SCREEN_HEIGHT // 2 - self.player.height // 2  # Center vertically
+
+                if keys[pygame.K_ESCAPE]:
+                    pygame.QUIT
+                    sys.exit()
+
 
             for bullet in self.bullets[:]:
                 bullet.y -= BULLET_SPEED
@@ -180,19 +241,34 @@ class SpaceInvaders:
             # Draw everything
 
             self.screen.blit(self.bg, (0, 0))
+            if self.is_spread_active:
+                self.player_speed = 15
+                if power_up_timer > 0 and power_up_timer % 5 == 0:
+                    self.player_image = NEGATIVE
+                else:
+                    self.player_image = NORMAL
+                
+            else:
+                self.player_image = NORMAL
             self.screen.blit(self.player_image, self.player.topleft)
 
             for bullet in self.bullets:
-                pygame.draw.rect(self.screen, GREEN, bullet)
+                color = (0,255,0)
+                if self.is_spread_active:
+                    if power_up_timer > 0 and power_up_timer % 5 == 0:
+                        color = (255,255,255)
+                    else:
+                        color = (0,255,0)
+                    
+                else:
+                    color = (0,255,0)
+                pygame.draw.rect(self.screen,color , bullet)
+
 
             for enemy in self.enemies:
                 enemy.draw(self.screen)
-                if(enemy.get_rect().colliderect(self.player)) or (enemy.get_rect().y >= SCREEN_HEIGHT):
+                if not self.is_spread_active and (enemy.get_rect().colliderect(self.player)) or (enemy.get_rect().y >= SCREEN_HEIGHT):
                     show_end_screen(self.screen,self.score)
-
-            for bullet in enemy_bullets:
-                bullet.draw(self.screen)
-
 
             for powerup in self.powerups:
                 powerup.draw(self.screen)
@@ -204,7 +280,7 @@ class SpaceInvaders:
             for obstacle in self.obstacles:
                 self.create_flames(obstacle.get_rect().x + 10,obstacle.get_rect().y + 10,5)
                 obstacle.draw(self.screen)
-                if self.player.colliderect(obstacle.rect):  # Check for collision
+                if not self.is_spread_active and self.player.colliderect(obstacle.rect):  # Check for collision
                     self.player_health -= OBSTACLE_DAMAGE * self.damage_multiplier
                     if self.score > 0:
                         self.score -= 15
@@ -218,6 +294,8 @@ class SpaceInvaders:
                     enemy_bullets.remove(bullet)
                     if self.player_health <= 0:
                         show_end_screen(self.screen,self.score)
+                if bullet.get_y() > SCREEN_HEIGHT:
+                    enemy_bullets.remove(bullet)
 
             for particle in self.particles:
                 particle.draw(self.screen) 
@@ -257,7 +335,7 @@ class SpaceInvaders:
             self.is_spread_active = True
             self.spread_activated_time = pygame.time.get_ticks()
         if powerup_type == "heal":
-            self.create_particles(self.player.x,self.player.y,(0,255,0))
+            self.create_particles(self.player.x,self.player.y,(255,255,0))
             self.player_health += 15
             
 
@@ -289,7 +367,7 @@ class SpaceInvaders:
     def spawn_power_up(self,power_ups):
         rand_index = random.randrange(0, len(POWER_UP_TYPES))
         rand_type = POWER_UP_TYPES[rand_index]
-        new_power_up = powerup.PowerUp(random.randint(0,SCREEN_WIDTH),random.randint(0,100),5,5,rand_type)
+        new_power_up = powerup.PowerUp(random.randint(0,SCREEN_WIDTH),random.randint(0,100),7,7,rand_type)
         power_ups.append(new_power_up)
 
     def should_power_up_spawn(self):

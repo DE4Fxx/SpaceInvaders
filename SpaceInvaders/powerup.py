@@ -8,7 +8,7 @@ class PowerUp:
         self.type = powerup_type
         self.rect = pygame.Rect(x, y, width, height)
         self.active_duration = 5000 
-        self.speed = 5.5
+        self.speed = 4
         if(self.type == "heal"):
             self.color = (255, 255, 0)
         elif(self.type == "spread"):

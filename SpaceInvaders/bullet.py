@@ -9,8 +9,11 @@ class Bullet:
     def move(self):
         self.rect.y += self.speed
 
+    def get_y(self):
+        return self.rect.y
+
     def draw(self, screen):
-        pygame.draw.rect(screen, (255, 0, 0), self.rect)  # Draw bullet as red rectangle
+        pygame.draw.rect(screen, (255,0,0), self.rect)  # Draw bullet as red rectangle
 
     def collide_rect(self,player):
         return self.rect.colliderect(player)

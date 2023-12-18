@@ -1,6 +1,7 @@
 import pygame
 
 PLAYER_IMAGE = "assets/spaceship.1.png"
+NEGATIVE_IMAGE = "assets/spaceship_negative.png"
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
 ENEMY_SIZE = 40
 PLAYER_SIZE = 40

@@ -1,4 +1,6 @@
+import csv
 import math
+import os
 import time
 import pygame
 import random
@@ -12,8 +14,6 @@ import sys
 
 NEGATIVE = pygame.transform.scale(pygame.image.load(NEGATIVE_IMAGE), (PLAYER_SIZE, PLAYER_SIZE))
 NORMAL = pygame.transform.scale(pygame.image.load(PLAYER_IMAGE), (PLAYER_SIZE, PLAYER_SIZE))
-
-
 
 
 class SpaceInvaders:
@@ -42,7 +42,7 @@ class SpaceInvaders:
         self.powerups = []
         self.obstacles = []
         self.particles = []
-        self.player_damage = 8
+        self.player_damage = 2.5
         self.multiplier = 1
         self.last_shot_time = 0
         self.shooting_delay = 50
@@ -51,7 +51,7 @@ class SpaceInvaders:
         self.spread_activated_time = 0
         self.player_health = 100 
         self.max_health = 100     # Maximum health
-        self.health_bar_length = 100  # Total length of the health bar
+        self.health_bar_length = 200  # Total length of the health bar
         self.health_ratio = self.health_bar_length / self.max_health
         self.damage_multiplier = 1
         if pygame.joystick.get_count() == 0:
@@ -421,6 +421,45 @@ def is_enemy_in_line_of_sight(player, enemy):
     distance = math.sqrt((enemy.get_rect().x - player.x) ** 2 + (enemy.get_rect().y - player.y) ** 2)
     return distance <= SCREEN_HEIGHT
 
+def get_input(prompt,score):
+    text = ''
+    input_active = True
+
+    while input_active:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    input_active = False
+                elif event.key == pygame.K_BACKSPACE:
+                    text = text[:-1]
+                else:
+                    text += event.unicode
+
+        text_surface = FONT.render(prompt+ text, True, (255,255,255))
+        screen.blit(text_surface, (50, 50))
+        pygame.display.flip()
+
+    save_score(text,score,SCORES)
+    display_high_scores(screen)
+
+
+def save_score(player_name, player_score, file_name):
+    fieldnames = ['name', 'score']
+    file_exists = os.path.isfile(file_name)  # Check if file already exists
+
+    print(f"Saving score to {file_name}: {player_name}, {player_score}")
+    print(f"File exists: {file_exists}")
+
+    with open(file_name, 'a', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+        if not file_exists:  # If the file does not exist, write the header
+            writer.writeheader()
+
+        writer.writerow({'name': player_name, 'score': player_score})
 
 def show_start_screen(screen):
     message = 'Press Enter to Start (Press H to learn how to play or ESC to exit)'
@@ -428,7 +467,6 @@ def show_start_screen(screen):
     color1 = (128,0,255)
     color2 = (255, 255, 0)
     current_color = color1
-    prompt_font = pygame.font.Font(None, 40)  # Small font for the prompt
 
     while running:
         for event in pygame.event.get():
@@ -438,15 +476,18 @@ def show_start_screen(screen):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:  # Start the game on pressing Enter
                     running = False
-                    return True
+                    game = SpaceInvaders()
+                    game.mainloop()
                 if event.key == pygame.K_h:  # Press 'H' to open How to Play screen
                     show_how_to_play_screen(screen)
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
+                if event.key == pygame.K_s:
+                    display_high_scores(screen)
                 
 
-        screen.blit(pygame.image.load("assets\start.png"),(0,0))
+        screen.blit(pygame.transform.scale(pygame.image.load("assets\start.png"),(SCREEN_WIDTH,SCREEN_HEIGHT)),(0,0))
 
         # Render the title
 
@@ -463,10 +504,57 @@ def show_start_screen(screen):
         prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT * 2 / 3))
         screen.blit(prompt_surface, prompt_rect)
 
+        prompt_surface2 = render_text("You can also press S to view the high scores",current_color)
+        prompt_rect2 = prompt_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT * 2 / 2.7))
+        screen.blit(prompt_surface2, prompt_rect2)
+
 
         pygame.display.flip()  # Update the display
 
     return True  # Return True if the game should start
+
+def display_high_scores(screen, scores_file=SCORES):
+    # Read scores from file
+    with open(scores_file, 'r') as file:
+        reader = csv.DictReader(file)
+        scores = [row for row in reader]
+
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
+                if event.key == pygame.K_RETURN:
+                    show_start_screen(screen)  # Ensure this function is defined
+
+        bg = pygame.transform.scale(pygame.image.load(BACKGROUND_IMAGE), (SCREEN_WIDTH, SCREEN_HEIGHT))
+        screen.blit(bg, (0, 0))
+
+        title_surf = FONT.render("High Scores", True, (255, 255, 255))
+        title_rect = title_surf.get_rect(center=(SCREEN_WIDTH // 2, 50))
+        screen.blit(title_surf, title_rect)
+
+        start_y = 100
+        if scores:
+            for score in scores:
+                score_surf = FONT.render(f"{score['name']} - {score['score']}", True, (255, 255, 255))
+                score_rect = score_surf.get_rect(center=(SCREEN_WIDTH // 2, start_y))
+                screen.blit(score_surf, score_rect)
+                start_y += 50
+        else:
+            no_scores_surf = FONT.render("No high scores yet", True, (255, 255, 255))
+            no_scores_rect = no_scores_surf.get_rect(center=(SCREEN_WIDTH // 2, start_y))
+            screen.blit(no_scores_surf, no_scores_rect)
+
+        prompt_surf = FONT.render("Press ENTER to return to start screen or ESC to exit", True, (255, 255, 255))
+        prompt_rect = prompt_surf.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50))
+        screen.blit(prompt_surf, prompt_rect)
+
+        pygame.display.flip()  # Update the display
+
 
 def render_text(message,color):
 
@@ -505,9 +593,53 @@ def show_how_to_play_screen(screen):
 
         pygame.display.flip()  # Update the display
 
-def show_end_screen(screen, score):
+def get_player_name(screen, prompt):
+    # Basic text input functionality
+    name = ''
+    input_box = pygame.Rect(100, 100, 140, 32)
+
+    done = False
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    display_high_scores(screen)
+                elif event.key == pygame.K_BACKSPACE:
+                    name = name[:-1]
+                else:
+                    name += event.unicode
+
+        screen.fill((30, 30, 30))
+        txt_surface = FONT.render(prompt + name, True, (255,255,255))
+        width = max(200, txt_surface.get_width()+10)
+        input_box.w = width
+        screen.blit(txt_surface, (input_box.x+5, input_box.y+5))
+        pygame.display.flip()
+
+    return name
+
+def show_end_screen(screen, player_score):
     restart = False
     running = True
+
+    # Read the existing high scores
+    with open(SCORES, 'r') as f:
+        reader = csv.DictReader(f)
+        if reader.line_num > 1:
+            next(reader)
+            scores = [row for row in reader]
+            scores.sort(key=lambda x: int(x['score']), reverse=True)
+        else:
+            scores = None
+
+        print(scores)
+
+    new_high_score = False
+    if not scores or int(scores[-1]['score']) < player_score:
+        new_high_score = True
 
     while running:
         for event in pygame.event.get():
@@ -526,11 +658,14 @@ def show_end_screen(screen, score):
                     sys.exit()
 
         screen.fill((0, 0, 0))
-
         title_surface = render_text('Game Over!', (255, 255, 255))
-        score_surface = render_text('Score: ' + str(score), (255, 255, 255))
+        score_surface = render_text('Score: ' + str(player_score), (255, 255, 255))
         title_rect = title_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3))
         score_rect = score_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
+
+        if new_high_score:
+            time.sleep(5)
+            player_name = get_input("Enter your name: ", player_score)
 
         prompt_surface = render_text('Press Enter to Restart or Escape key to exit', (255, 255, 255))
         prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT * 2 / 3))
@@ -541,11 +676,7 @@ def show_end_screen(screen, score):
 
         pygame.display.flip()
 
-    if restart:
-        # Restart the game
-        game = SpaceInvaders()
-        game.mainloop()
-
+    return restart
 
 if __name__ == "__main__":
     pygame.init()

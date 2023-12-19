@@ -1,8 +1,8 @@
 import pygame
 
+pygame.init()
 PLAYER_IMAGE = "assets/spaceship.1.png"
 NEGATIVE_IMAGE = "assets/spaceship_negative.png"
-SCREEN_WIDTH, SCREEN_HEIGHT = 1920, 1080
 FONT_PATH = "assets/slkscrb.ttf"
 ENEMY_SIZE = 120
 PLAYER_SIZE = 80
@@ -17,6 +17,9 @@ OBS_INTERVAL = 50
 REGEN_INTERVAL = 400
 OBSTACLE_DAMAGE = 9
 POWER_UP_INTERVAL = 100
+SCORES = "scores.csv"
+INFO = pygame.display.Info()
+SCREEN_WIDTH, SCREEN_HEIGHT = INFO.current_w, INFO.current_h
 SPREAD_INTERVAL = 750
 pygame.font.init()
 FONT = pygame.font.Font(FONT_PATH, 36)

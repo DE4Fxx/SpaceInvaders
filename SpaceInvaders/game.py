@@ -23,6 +23,7 @@ class SpaceInvaders:
 
     def __init__(self):
         pygame.init()
+        pygame.display.set_icon(pygame.image.load("assets/icon.jpg"))
         player_image_original = pygame.image.load(PLAYER_IMAGE)
         self.player_image = pygame.transform.scale(player_image_original, (PLAYER_SIZE, PLAYER_SIZE))
         self.player = self.player_image.get_rect()
@@ -31,7 +32,7 @@ class SpaceInvaders:
         self.max = 350
         self.regen = False
         self.bg = pygame.transform.scale(pygame.image.load(BACKGROUND_IMAGE), (SCREEN_WIDTH, SCREEN_HEIGHT))
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT),pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
         pygame.display.set_caption("Space Invaders")
         self.enemies = [enemy.Enemy(self.min,self.max, self.player.x) for _ in range(random.randint(5,10))]
         self.player.topleft = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 60)
@@ -665,8 +666,7 @@ def show_end_screen(screen, player_score):
         score_rect = score_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
 
         if new_high_score:
-            time.sleep(5)
-            player_name = get_input("Enter your name: ", player_score,pygame.image.load("assets\start.png"))
+            player_name = get_input("Enter your name: ", player_score,pygame.transform.scale(pygame.image.load("assets\start.png"),(SCREEN_WIDTH,SCREEN_HEIGHT)))
 
         prompt_surface = render_text('Press Enter to Restart or Escape key to exit', (255, 255, 255))
         prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT * 2 / 3))

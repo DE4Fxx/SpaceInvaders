@@ -421,7 +421,7 @@ def is_enemy_in_line_of_sight(player, enemy):
     distance = math.sqrt((enemy.get_rect().x - player.x) ** 2 + (enemy.get_rect().y - player.y) ** 2)
     return distance <= SCREEN_HEIGHT
 
-def get_input(prompt,score):
+def get_input(prompt,score,bg):
     text = ''
     input_active = True
 
@@ -438,8 +438,9 @@ def get_input(prompt,score):
                 else:
                     text += event.unicode
 
-        text_surface = FONT.render(prompt+ text, True, (255,255,255))
-        screen.blit(text_surface, (50, 50))
+        text_surface = FONT.render(prompt+ text, True, (0,255,255))
+        screen.blit(bg,(0,0))
+        screen.blit(text_surface, (SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
         pygame.display.flip()
 
     save_score(text,score,SCORES)
@@ -533,19 +534,19 @@ def display_high_scores(screen, scores_file=SCORES):
         bg = pygame.transform.scale(pygame.image.load(BACKGROUND_IMAGE), (SCREEN_WIDTH, SCREEN_HEIGHT))
         screen.blit(bg, (0, 0))
 
-        title_surf = FONT.render("High Scores", True, (255, 255, 255))
+        title_surf = FONT.render("High Scores", True, (0, 255, 0))
         title_rect = title_surf.get_rect(center=(SCREEN_WIDTH // 2, 50))
         screen.blit(title_surf, title_rect)
 
         start_y = 100
         if scores:
             for score in scores:
-                score_surf = FONT.render(f"{score['name']} - {score['score']}", True, (255, 255, 255))
+                score_surf = FONT.render(f"{score['name']} - {score['score']}", True, (0, 255, 0))
                 score_rect = score_surf.get_rect(center=(SCREEN_WIDTH // 2, start_y))
                 screen.blit(score_surf, score_rect)
                 start_y += 50
         else:
-            no_scores_surf = FONT.render("No high scores yet", True, (255, 255, 255))
+            no_scores_surf = FONT.render("No high scores yet", True, (100, 0, 0))
             no_scores_rect = no_scores_surf.get_rect(center=(SCREEN_WIDTH // 2, start_y))
             screen.blit(no_scores_surf, no_scores_rect)
 
@@ -665,7 +666,7 @@ def show_end_screen(screen, player_score):
 
         if new_high_score:
             time.sleep(5)
-            player_name = get_input("Enter your name: ", player_score)
+            player_name = get_input("Enter your name: ", player_score,pygame.image.load("assets\start.png"))
 
         prompt_surface = render_text('Press Enter to Restart or Escape key to exit', (255, 255, 255))
         prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT * 2 / 3))

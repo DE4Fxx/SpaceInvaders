@@ -264,7 +264,7 @@ class SpaceInvaders:
             self.screen.blit(self.bg, (0, 0))
             if self.is_spread_active:
                 self.player_speed = 15
-                if power_up_timer > 0 and power_up_timer % 5 == 0:
+                if power_up_timer > 0 and power_up_timer % 10 == 0:
                     self.player_image = NEGATIVE
                 else:
                     self.player_image = NORMAL
@@ -475,7 +475,6 @@ def render_text(message,color):
 
 def show_how_to_play_screen(screen):
     running = True
-    font = pygame.font.Font(None, 36)  # Standard font for text
 
     while running:
         for event in pygame.event.get():
@@ -501,7 +500,7 @@ def show_how_to_play_screen(screen):
         ]
 
         for i, line in enumerate(instructions):
-            text_surface = font.render(line, True, (255, 255, 255))  # White color
+            text_surface = render_text(line, (255, 255, 255))
             screen.blit(text_surface, (50, 30 + 30 * i))
 
         pygame.display.flip()  # Update the display
@@ -509,8 +508,6 @@ def show_how_to_play_screen(screen):
 def show_end_screen(screen, score):
     restart = False
     running = True
-    title_font = pygame.font.Font(None, 80)
-    prompt_font = pygame.font.Font(None, 40)
 
     while running:
         for event in pygame.event.get():
@@ -530,12 +527,12 @@ def show_end_screen(screen, score):
 
         screen.fill((0, 0, 0))
 
-        title_surface = title_font.render('Game Over!', True, (255, 255, 255))
-        score_surface = prompt_font.render('Score: ' + str(score), True, (255, 255, 255))
+        title_surface = render_text('Game Over!', (255, 255, 255))
+        score_surface = render_text('Score: ' + str(score), (255, 255, 255))
         title_rect = title_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3))
         score_rect = score_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
 
-        prompt_surface = prompt_font.render('Press Enter to Restart or Escape key to exit', True, (255, 255, 255))
+        prompt_surface = render_text('Press Enter to Restart or Escape key to exit', (255, 255, 255))
         prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT * 2 / 3))
 
         screen.blit(title_surface, title_rect)

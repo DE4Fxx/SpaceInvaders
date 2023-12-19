@@ -10,11 +10,11 @@ class Enemy:
 
     __slots__ = ["surface","bullets","hp","rect"]
 
-    def __init__(self, min, max):
+    def __init__(self, min, max, player_x):
         self.surface = pygame.image.load(ENEMY_PATH)
         self.surface = pygame.transform.scale(self.surface, (ENEMY_SIZE, ENEMY_SIZE))  # Resize the image
         self.rect = self.surface.get_rect()
-        self.rect.x = random.randint(0, SCREEN_WIDTH - ENEMY_SIZE)
+        self.rect.x = random.randint(0, SCREEN_WIDTH - player_x)
         self.rect.y = random.randint(0, 100)
         self.hp = random.randint(min, max)
 

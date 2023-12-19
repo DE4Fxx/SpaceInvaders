@@ -17,5 +17,8 @@ class PowerUp:
     def move(self):
         self.rect.y += self.speed
 
+    def get_rect(self):
+        return self.rect
+
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, self.rect)

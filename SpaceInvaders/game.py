@@ -1,3 +1,5 @@
+import math
+import time
 import pygame
 import random
 import enemy
@@ -16,21 +18,22 @@ NORMAL = pygame.transform.scale(pygame.image.load(PLAYER_IMAGE), (PLAYER_SIZE, P
 
 class SpaceInvaders:
 
-    __slots__ = ["dead_zone","control","joystick","screen","enemies","damage_multiplier","bullets","player","player_pos","particles","player_health","max_health","health_bar_length","health_ratio","player_speed","player_damage","multiplier","bg","min","max","player_image","last_shot_time","shooting_delay","is_spread_active","spread_duration","spread_activated_time","powerups","obstacles","score"]
+    __slots__ = ["regen_activated_time","regen","dead_zone","control","joystick","screen","enemies","damage_multiplier","bullets","player","player_pos","particles","player_health","max_health","health_bar_length","health_ratio","player_speed","player_damage","multiplier","bg","min","max","player_image","last_shot_time","shooting_delay","is_spread_active","spread_duration","spread_activated_time","powerups","obstacles","score"]
 
 
     def __init__(self):
         pygame.init()
-        self.score = 0
-        self.min = 100
-        self.max = 350
-        self.bg = pygame.transform.scale(pygame.image.load(BACKGROUND_IMAGE), (SCREEN_WIDTH, SCREEN_HEIGHT))
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
-        pygame.display.set_caption("Space Invaders")
-        self.enemies = [enemy.Enemy(self.min,self.max) for _ in range(random.randint(5,10))]
         player_image_original = pygame.image.load(PLAYER_IMAGE)
         self.player_image = pygame.transform.scale(player_image_original, (PLAYER_SIZE, PLAYER_SIZE))
         self.player = self.player_image.get_rect()
+        self.score = 0
+        self.min = 100
+        self.max = 350
+        self.regen = False
+        self.bg = pygame.transform.scale(pygame.image.load(BACKGROUND_IMAGE), (SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT),pygame.FULLSCREEN)
+        pygame.display.set_caption("Space Invaders")
+        self.enemies = [enemy.Enemy(self.min,self.max, self.player.x) for _ in range(random.randint(5,10))]
         self.player.topleft = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 60)
         self.player.topleft = SCREEN_WIDTH // 2, SCREEN_HEIGHT - 60
         self.player.width = PLAYER_SIZE
@@ -48,13 +51,13 @@ class SpaceInvaders:
         self.spread_activated_time = 0
         self.player_health = 100 
         self.max_health = 100     # Maximum health
-        self.health_bar_length = 200  # Total length of the health bar
+        self.health_bar_length = 100  # Total length of the health bar
         self.health_ratio = self.health_bar_length / self.max_health
         self.damage_multiplier = 1
         if pygame.joystick.get_count() == 0:
             self.control = "keyboard"
             self.joystick = None
-            self.player_speed = 10 
+            self.player_speed = PLAYER_SPEED
         else:
             self.dead_zone = 0.1
             self.joystick = pygame.joystick.Joystick(0)
@@ -68,6 +71,7 @@ class SpaceInvaders:
         enemy_move_timer = 0
         spread_timer = 0
         enemy_timer = 0
+        regen_timer = 0
         obstacle_move_timer = 0
         obstacle_spawn_timer = 0
         power_up_timer = 0
@@ -80,6 +84,10 @@ class SpaceInvaders:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                            pygame.quit
+                            sys.exit()
                 if self.control == "keyboard":
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
@@ -87,9 +95,10 @@ class SpaceInvaders:
                     if event.type == pygame.KEYUP:
                         if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
                             self.player_speed *= 2
+                    
                 if self.control == "joystick":
                     if event.type == pygame.JOYBUTTONDOWN or pressing:
-                        if event.button == 0:
+                        if self.joystick.get_button(0):
                             pressing = True
                             current_time = pygame.time.get_ticks()
                             if current_time - self.last_shot_time >= self.shooting_delay:
@@ -104,7 +113,7 @@ class SpaceInvaders:
                                     # Create a normal bullet
                                     self.bullets.append(pygame.Rect(self.player.centerx, self.player.y, BULLET_SIZE, BULLET_SIZE))
                                 self.last_shot_time = current_time
-                        if event.button == 5:
+                        if self.joystick.get_button(5):
                             self.player_speed /= 2
 
                     if event.type == pygame.JOYAXISMOTION:
@@ -181,6 +190,9 @@ class SpaceInvaders:
             power_up_timer += dt
             if self.is_spread_active:
                 spread_timer += dt // 4
+
+            if self.regen:
+                regen_timer += dt // 3.5
             if enemy_move_timer >= ENEMY_INTERVAL:
                 for enemy in self.enemies:
                     enemy.move(ENEMY_SPEED)  # Move each enemy
@@ -200,6 +212,11 @@ class SpaceInvaders:
             if enemy_timer >= ENEMY_INTERVAL and self.should_enemy_spawn():
                 self.spawn_enemy(self.enemies)
                 enemy_timer = 0  # Reset the timer
+
+            if regen_timer >= REGEN_INTERVAL:
+                self.regen = False
+                regen_timer = 0
+            
 
             if power_up_timer >= POWER_UP_INTERVAL and self.should_power_up_spawn():
                 self.spawn_power_up(self.powerups)
@@ -221,7 +238,8 @@ class SpaceInvaders:
                             enemy.reduce_hp(self.player_damage*self.multiplier)
                 if self.should_enemy_shoot(enemy_bullets):
                     enemy = self.enemies[random.randrange(0,len(self.enemies))]
-                    enemy_bullets.append(enemy.shoot())
+                    if is_enemy_in_line_of_sight(self.player,enemy):
+                        enemy_bullets.append(enemy.shoot())
 
 
             for particle in self.particles[:]:
@@ -238,6 +256,9 @@ class SpaceInvaders:
             for powerup in self.powerups:
                 powerup.move()
 
+                if powerup.get_rect().y >= SCREEN_HEIGHT:
+                    self.powerups.remove(powerup)
+
             # Draw everything
 
             self.screen.blit(self.bg, (0, 0))
@@ -250,6 +271,8 @@ class SpaceInvaders:
                 
             else:
                 self.player_image = NORMAL
+                self.player_speed = 10
+
             self.screen.blit(self.player_image, self.player.topleft)
 
             for bullet in self.bullets:
@@ -275,6 +298,7 @@ class SpaceInvaders:
 
                 if self.player.colliderect(powerup.rect):  # Check for collision
                     self.activate_powerup(powerup.type)
+                    power_up_timer /= 2
                     self.powerups.remove(powerup)
             
             for obstacle in self.obstacles:
@@ -286,6 +310,8 @@ class SpaceInvaders:
                         self.score -= 15
                     self.obstacles.remove(obstacle)
                     self.shake_screen(2,5)
+                if obstacle.get_rect().y > SCREEN_HEIGHT:
+                    self.obstacles.remove(obstacle)
                 
             for bullet in enemy_bullets:
                 bullet.draw(self.screen)
@@ -300,6 +326,9 @@ class SpaceInvaders:
             for particle in self.particles:
                 particle.draw(self.screen) 
 
+            if dt % 5 == 0 and self.regen and self.player_health < 94.5:
+                self.player_health += 5.5
+            
             
             self.draw_health_bar(self.player_health)
             self.display_score(self.score)
@@ -309,6 +338,7 @@ class SpaceInvaders:
 
     def should_obstacle_spawn(self):
         return random.randint(0,100) < 10
+    
     
     def shake_screen(self, duration, intensity):
         original_pos = self.screen.get_rect().topleft
@@ -337,6 +367,8 @@ class SpaceInvaders:
         if powerup_type == "heal":
             self.create_particles(self.player.x,self.player.y,(255,255,0))
             self.player_health += 15
+            self.regen = True
+            self.regen_activated_time = pygame.time.get_ticks()
             
 
     def create_particles(self, x, y,color, num_particles=50):
@@ -361,7 +393,7 @@ class SpaceInvaders:
         self.obstacles.append(new_obstacle)
 
     def spawn_enemy(self,enemies):
-        new_enemy = enemy.Enemy(self.min,self.max)
+        new_enemy = enemy.Enemy(self.min,self.max,self.player.x)
         enemies.append(new_enemy)
 
     def spawn_power_up(self,power_ups):
@@ -384,10 +416,19 @@ class SpaceInvaders:
         score_text = FONT.render(f'Score: {score}', True, (255, 255, 255))  # White color
         self.screen.blit(score_text, (10, 40))  # Position the score at the top-left corner
         
+
+def is_enemy_in_line_of_sight(player, enemy):
+    distance = math.sqrt((enemy.get_rect().x - player.x) ** 2 + (enemy.get_rect().y - player.y) ** 2)
+    return distance <= SCREEN_HEIGHT
+
+
 def show_start_screen(screen):
+    message = 'Press Enter to Start (Press H to learn how to play or ESC to exit)'
     running = True
-    title_font = pygame.font.Font(None, 80)  # Large font for the title
-    prompt_font = pygame.font.Font(None, 40)  # Smaller font for the prompt
+    color1 = (128,0,255)
+    color2 = (255, 255, 0)
+    current_color = color1
+    prompt_font = pygame.font.Font(None, 40)  # Small font for the prompt
 
     while running:
         for event in pygame.event.get():
@@ -400,22 +441,37 @@ def show_start_screen(screen):
                     return True
                 if event.key == pygame.K_h:  # Press 'H' to open How to Play screen
                     show_how_to_play_screen(screen)
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
+                
 
-        screen.fill((0, 0, 0))  # Fill the screen with black or any other color
+        screen.blit(pygame.image.load("assets\start.png"),(0,0))
 
         # Render the title
-        title_surface = title_font.render('Space Invaders', True, (255, 255, 255))
-        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3))
-        screen.blit(title_surface, title_rect)
+
+        int = random.randint(0,1)
+
+        if int == 0:
+            current_color = color1
+        else:
+            current_color = color2
+        
 
         # Render the start prompt
-        prompt_surface = prompt_font.render('Press Enter to Start (Press H to learn how to play)', True, (255, 255, 255))
+        prompt_surface = render_text(message,current_color)
         prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT * 2 / 3))
         screen.blit(prompt_surface, prompt_rect)
+
 
         pygame.display.flip()  # Update the display
 
     return True  # Return True if the game should start
+
+def render_text(message,color):
+
+    font = pygame.font.Font(FONT_PATH,25)
+    return font.render(message,True,color)
 
 def show_how_to_play_screen(screen):
     running = True

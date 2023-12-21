@@ -296,10 +296,10 @@ class SpaceInvaders:
 
             for powerup in self.powerups:
                 powerup.draw(self.screen)
-
-                if self.player.colliderect(powerup.rect):  # Check for collision
+                print(powerup.get_rect().x,powerup.get_rect().y)
+                if powerup.collide(self.player):  # Check for collision
                     self.activate_powerup(powerup.type)
-                    power_up_timer /= 2
+                    power_up_timer = 0
                     self.powerups.remove(powerup)
             
             for obstacle in self.obstacles:
@@ -400,7 +400,7 @@ class SpaceInvaders:
     def spawn_power_up(self,power_ups):
         rand_index = random.randrange(0, len(POWER_UP_TYPES))
         rand_type = POWER_UP_TYPES[rand_index]
-        new_power_up = powerup.PowerUp(random.randint(0,SCREEN_WIDTH),random.randint(0,100),7,7,rand_type)
+        new_power_up = powerup.PowerUp(random.randint(0,SCREEN_WIDTH),random.randint(0,100),rand_type)
         power_ups.append(new_power_up)
 
     def should_power_up_spawn(self):
@@ -639,7 +639,7 @@ def show_end_screen(screen, player_score):
             get_input("Enter your name: ", player_score)
         
         prompt_surface = render_text('Press Enter to Restart or Escape key to exit', (255, 255, 255),45)
-        prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT * 2 / 3))
+        prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT * 2 / 3 - 30))
         screen.blit(GAME_OVER_IMAGE,(0,0))
         screen.blit(score_surface, score_rect)
         if not new_high_score:
@@ -649,7 +649,10 @@ def show_end_screen(screen, player_score):
         time = timer.tick(60)
         elapsed_time += time
 
-    return restart
+    if restart:
+        game = SpaceInvaders()
+        game.mainloop()
+
 
 if __name__ == "__main__":
     pygame.init()

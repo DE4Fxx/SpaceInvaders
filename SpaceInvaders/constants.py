@@ -29,6 +29,8 @@ FONT = pygame.font.Font(FONT_PATH, 36)
 POWER_UP_TYPES = ["heal","spread"]
 PLAYER_SPEED = 10
 
+HEALTH = pygame.transform.scale(pygame.image.load("assets\healthpack.png"),(30,30))
+BULLET = pygame.transform.scale(pygame.image.load("assets/bulletpack.png"),(20,30))
 img = pygame.image.load("assets\gameover.png")
 GAME_OVER_IMAGE = pygame.transform.scale(img,(SCREEN_WIDTH,SCREEN_HEIGHT))
 

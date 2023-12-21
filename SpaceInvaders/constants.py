@@ -17,6 +17,9 @@ OBS_INTERVAL = 50
 REGEN_INTERVAL = 400
 OBSTACLE_DAMAGE = 9
 POWER_UP_INTERVAL = 100
+ENEMY_BULLET_HEIGHT = 7
+ENEMY_BULLET_WIDTH = 9
+ENEMY_BULLET_SPEED = 7
 SCORES = "scores.csv"
 INFO = pygame.display.Info()
 SCREEN_WIDTH, SCREEN_HEIGHT = INFO.current_w, INFO.current_h
@@ -25,3 +28,8 @@ pygame.font.init()
 FONT = pygame.font.Font(FONT_PATH, 36)
 POWER_UP_TYPES = ["heal","spread"]
 PLAYER_SPEED = 10
+
+img = pygame.image.load("assets\gameover.png")
+GAME_OVER_IMAGE = pygame.transform.scale(img,(SCREEN_WIDTH,SCREEN_HEIGHT))
+
+START_BG = pygame.transform.scale(pygame.image.load("assets\start.png"),(SCREEN_WIDTH,SCREEN_HEIGHT))

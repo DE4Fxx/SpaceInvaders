@@ -422,7 +422,7 @@ def is_enemy_in_line_of_sight(player, enemy):
     distance = math.sqrt((enemy.get_rect().x - player.x) ** 2 + (enemy.get_rect().y - player.y) ** 2)
     return distance <= SCREEN_HEIGHT
 
-def get_input(prompt,score,bg):
+def get_input(prompt,score):
     text = ''
     input_active = True
 
@@ -438,10 +438,11 @@ def get_input(prompt,score,bg):
                     text = text[:-1]
                 else:
                     text += event.unicode
-
+        screen.fill((0,0,0),pygame.rect.Rect(0,0,SCREEN_WIDTH,SCREEN_WIDTH))
+        title_surf = FONT.render("New high score!",True,(0,255,255))
         text_surface = FONT.render(prompt+ text, True, (0,255,255))
-        screen.blit(bg,(0,0))
-        screen.blit(text_surface, (SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
+        screen.blit(title_surf,(SCREEN_WIDTH //2 - title_surf.get_width(),30))
+        screen.blit(text_surface, (SCREEN_WIDTH/2 - text_surface.get_width(), SCREEN_HEIGHT/2 - text_surface.get_height()))
         pygame.display.flip()
 
     save_score(text,score,SCORES)
@@ -452,8 +453,6 @@ def save_score(player_name, player_score, file_name):
     fieldnames = ['name', 'score']
     file_exists = os.path.isfile(file_name)  # Check if file already exists
 
-    print(f"Saving score to {file_name}: {player_name}, {player_score}")
-    print(f"File exists: {file_exists}")
 
     with open(file_name, 'a', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
@@ -465,10 +464,13 @@ def save_score(player_name, player_score, file_name):
 
 def show_start_screen(screen):
     message = 'Press Enter to Start (Press H to learn how to play or ESC to exit)'
+    elapsed_time = 0
     running = True
-    color1 = (128,0,255)
-    color2 = (255, 255, 0)
+    color1 = (0,150,255)
+    color2 = (0, 255, 0)
     current_color = color1
+
+    timer = pygame.time.Clock()
 
     while running:
         for event in pygame.event.get():
@@ -489,29 +491,31 @@ def show_start_screen(screen):
                     display_high_scores(screen)
                 
 
-        screen.blit(pygame.transform.scale(pygame.image.load("assets\start.png"),(SCREEN_WIDTH,SCREEN_HEIGHT)),(0,0))
+        screen.blit(START_BG,(0,0))
 
         # Render the title
 
-        int = random.randint(0,1)
 
-        if int == 0:
+        if elapsed_time % 10 == 0:
             current_color = color1
-        else:
+        elif elapsed_time % 5 == 0:
             current_color = color2
         
 
         # Render the start prompt
-        prompt_surface = render_text(message,current_color)
+        prompt_surface = render_text(message,current_color,35)
         prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT * 2 / 3))
         screen.blit(prompt_surface, prompt_rect)
 
-        prompt_surface2 = render_text("You can also press S to view the high scores",current_color)
+        prompt_surface2 = render_text("You can also press S to view the high scores",current_color,35)
         prompt_rect2 = prompt_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT * 2 / 2.7))
         screen.blit(prompt_surface2, prompt_rect2)
 
 
         pygame.display.flip()  # Update the display
+
+        time = timer.tick(60)
+        elapsed_time += time
 
     return True  # Return True if the game should start
 
@@ -558,9 +562,9 @@ def display_high_scores(screen, scores_file=SCORES):
         pygame.display.flip()  # Update the display
 
 
-def render_text(message,color):
+def render_text(message,color,size):
 
-    font = pygame.font.Font(FONT_PATH,25)
+    font = pygame.font.Font(FONT_PATH,size)
     return font.render(message,True,color)
 
 def show_how_to_play_screen(screen):
@@ -590,57 +594,26 @@ def show_how_to_play_screen(screen):
         ]
 
         for i, line in enumerate(instructions):
-            text_surface = render_text(line, (255, 255, 255))
+            text_surface = render_text(line, (255, 255, 255),25)
             screen.blit(text_surface, (50, 30 + 30 * i))
 
         pygame.display.flip()  # Update the display
 
-def get_player_name(screen, prompt):
-    # Basic text input functionality
-    name = ''
-    input_box = pygame.Rect(100, 100, 140, 32)
-
-    done = False
-    while not done:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    display_high_scores(screen)
-                elif event.key == pygame.K_BACKSPACE:
-                    name = name[:-1]
-                else:
-                    name += event.unicode
-
-        screen.fill((30, 30, 30))
-        txt_surface = FONT.render(prompt + name, True, (255,255,255))
-        width = max(200, txt_surface.get_width()+10)
-        input_box.w = width
-        screen.blit(txt_surface, (input_box.x+5, input_box.y+5))
-        pygame.display.flip()
-
-    return name
-
 def show_end_screen(screen, player_score):
+    timer = pygame.time.Clock()
+    elapsed_time = 0
     restart = False
     running = True
 
     # Read the existing high scores
     with open(SCORES, 'r') as f:
         reader = csv.DictReader(f)
-        if reader.line_num > 1:
-            next(reader)
-            scores = [row for row in reader]
-            scores.sort(key=lambda x: int(x['score']), reverse=True)
-        else:
-            scores = None
+        scores = [row for row in reader]
+        scores.sort(key=lambda x: int(x['score']), reverse=True)
 
-        print(scores)
 
     new_high_score = False
-    if not scores or int(scores[-1]['score']) < player_score:
+    if not scores or int(scores[0]['score']) < player_score:
         new_high_score = True
 
     while running:
@@ -659,23 +632,22 @@ def show_end_screen(screen, player_score):
                     pygame.quit()
                     sys.exit()
 
-        screen.fill((0, 0, 0))
-        title_surface = render_text('Game Over!', (255, 255, 255))
-        score_surface = render_text('Score: ' + str(player_score), (255, 255, 255))
-        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3))
+        score_surface = render_text('Score: ' + str(player_score), (255, 255, 255),45)
         score_rect = score_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
 
-        if new_high_score:
-            player_name = get_input("Enter your name: ", player_score,pygame.transform.scale(pygame.image.load("assets\start.png"),(SCREEN_WIDTH,SCREEN_HEIGHT)))
-
-        prompt_surface = render_text('Press Enter to Restart or Escape key to exit', (255, 255, 255))
+        if new_high_score and elapsed_time > 3000:
+            get_input("Enter your name: ", player_score)
+        
+        prompt_surface = render_text('Press Enter to Restart or Escape key to exit', (255, 255, 255),45)
         prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT * 2 / 3))
-
-        screen.blit(title_surface, title_rect)
+        screen.blit(GAME_OVER_IMAGE,(0,0))
         screen.blit(score_surface, score_rect)
-        screen.blit(prompt_surface, prompt_rect)
+        if not new_high_score:
+            screen.blit(prompt_surface, prompt_rect)
 
         pygame.display.flip()
+        time = timer.tick(60)
+        elapsed_time += time
 
     return restart
 

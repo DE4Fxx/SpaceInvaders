@@ -46,9 +46,9 @@ class Enemy:
     def shoot(self):
             bullet_x = self.rect.centerx
             bullet_y = self.rect.bottom
-            bullet_width = 5
-            bullet_height = 5
-            bullet_speed = 7
+            bullet_width = ENEMY_BULLET_WIDTH
+            bullet_height = ENEMY_BULLET_HEIGHT
+            bullet_speed = ENEMY_BULLET_SPEED
             return bullet.Bullet(bullet_x, bullet_y, bullet_width, bullet_height, bullet_speed)
         
     def has_line_of_sight(self, player_rect, obstacles):

@@ -296,7 +296,6 @@ class SpaceInvaders:
 
             for powerup in self.powerups:
                 powerup.draw(self.screen)
-                print(powerup.get_rect().x,powerup.get_rect().y)
                 if powerup.collide(self.player):  # Check for collision
                     self.activate_powerup(powerup.type)
                     power_up_timer = 0

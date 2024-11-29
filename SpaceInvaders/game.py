@@ -1,7 +1,6 @@
 import csv
 import math
 import os
-import time
 import pygame
 import random
 import enemy
@@ -18,7 +17,7 @@ NORMAL = pygame.transform.scale(pygame.image.load(PLAYER_IMAGE), (PLAYER_SIZE, P
 
 class SpaceInvaders:
 
-    __slots__ = ["regen_activated_time","regen","dead_zone","control","joystick","screen","enemies","damage_multiplier","bullets","player","player_pos","particles","player_health","max_health","health_bar_length","health_ratio","player_speed","player_damage","multiplier","bg","min","max","player_image","last_shot_time","shooting_delay","is_spread_active","spread_duration","spread_activated_time","powerups","obstacles","score"]
+    __slots__ = ["enemy_speed","regen_activated_time","regen","dead_zone","control","joystick","screen","enemies","damage_multiplier","bullets","player","player_pos","particles","player_health","max_health","health_bar_length","health_ratio","player_speed","player_damage","multiplier","bg","min","max","player_image","last_shot_time","shooting_delay","is_spread_active","spread_duration","spread_activated_time","powerups","obstacles","score"]
 
 
     def __init__(self):
@@ -66,6 +65,7 @@ class SpaceInvaders:
             self.player_pos = [SCREEN_WIDTH//2,SCREEN_HEIGHT]
             self.control = "joystick"
             self.player_speed = 5
+        self.enemy_speed = ENEMY_SPEED
 
     def mainloop(self):
         clock = pygame.time.Clock()
@@ -132,7 +132,7 @@ class SpaceInvaders:
                                     self.player.y += self.player_pos[1] * self.player_speed
                     
 
-                    if event.type == pygame.JOYBUTTONUP:
+                    if event.type == pygame.JOYBUTTONDOWN:
                         if event.button == 5:
                             self.player_speed *= 2
                         # if event.button == 0:
@@ -465,9 +465,7 @@ def show_start_screen(screen):
     message = 'Press Enter to Start (Press H to learn how to play or ESC to exit)'
     elapsed_time = 0
     running = True
-    color1 = (0,150,255)
-    color2 = (0, 255, 0)
-    current_color = color1
+    current_color = FONT_COLORS[random.randint(0,len(FONT_COLORS) - 1)]
 
     timer = pygame.time.Clock()
 
@@ -495,10 +493,10 @@ def show_start_screen(screen):
         # Render the title
 
 
-        if elapsed_time % 10 == 0:
-            current_color = color1
-        elif elapsed_time % 5 == 0:
-            current_color = color2
+        if elapsed_time % 7 == 0:
+            current_color = FONT_COLORS[0]
+        else:
+            current_color = FONT_COLORS[1]
         
 
         # Render the start prompt
@@ -564,7 +562,7 @@ def display_high_scores(screen, scores_file=SCORES):
 def render_text(message,color,size):
 
     font = pygame.font.Font(FONT_PATH,size)
-    return font.render(message,True,color)
+    return font.render(message,True,color,(0,0,0))
 
 def show_how_to_play_screen(screen):
     running = True

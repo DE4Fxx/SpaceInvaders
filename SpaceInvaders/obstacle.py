@@ -2,8 +2,7 @@ import pygame
 import random
 from constants import *
 
-OBSTACLE_SIZE = 25
-ASTEROID_PATH = "assets/asteroid.png"
+
 
 class Obstacle:
 

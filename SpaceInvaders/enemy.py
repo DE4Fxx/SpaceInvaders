@@ -4,8 +4,6 @@ import random
 from constants import *
 
 
-ENEMY_PATH = "assets\enemyship.png"
-
 class Enemy:
 
     __slots__ = ["surface","bullets","hp","rect"]
